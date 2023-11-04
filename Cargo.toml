@@ -1,0 +1,23 @@
+[package]
+name = "tws"
+description = "A simple web server for developers"
+version = "0.0.0"
+edition = "2021"
+authors = ["Julius de Boer"]
+readme = "README.md"
+license = "MIT"
+publish = false
+
+[dependencies]
+rustix = "0.38.19"
+anyhow = "1.0.69"
+chrono = "0.4.31"
+clap = { version = "4.4.7", features = ["derive"] }
+colored = "2.0"
+hyper = { version = "0.14", features = ["full"]}
+mime_guess = "2.0.4"
+tokio = { version = "1.25", features = ["full"] }
+whoami = "1.4.1"
+
+[dev-dependencies]
+rustix = "0.38.19"
