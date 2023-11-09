@@ -26,7 +26,7 @@ struct Args {
     #[arg(
         short,
         long,
-        default_value = "127.0.0.1:4000",
+        default_value = "[::1]:4000",
         help = "What ip address to use"
     )]
     address: String,
