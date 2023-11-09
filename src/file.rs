@@ -4,19 +4,19 @@ use std::fs;
 pub enum FsEntityStatus {
     IsFile,
     IsDir,
-    NotFound
+    NotFound,
 }
 
 #[derive(Clone)]
 pub struct File {
     pub id: String,
-    pub content: Option<Vec<u8>>
+    pub content: Option<Vec<u8>>,
 }
 
 pub fn get_metadata(path: &str) -> Result<File, anyhow::Error> {
     Ok(File {
         id: path.to_string(),
-        content: None
+        content: None,
     })
 }
 

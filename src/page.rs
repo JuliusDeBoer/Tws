@@ -1,8 +1,8 @@
-use crate::log;
-use hyper::{ StatusCode, Body, Request };
-use std::fs;
-use crate::file::FsEntityStatus;
 use crate::file;
+use crate::file::FsEntityStatus;
+use crate::log;
+use hyper::{Body, Request, StatusCode};
+use std::fs;
 
 pub fn from_file(path: &str) -> Result<Body, StatusCode> {
     match file::get_fs_entity_status(path) {
@@ -25,16 +25,17 @@ pub fn from_file(path: &str) -> Result<Body, StatusCode> {
                     Err(StatusCode::INTERNAL_SERVER_ERROR)
                 }
             }
-        },
-        _ => {
-            Err(StatusCode::NOT_FOUND)
         }
+        _ => Err(StatusCode::NOT_FOUND),
     }
 }
 
 pub fn gen_err_page(status_code: StatusCode) -> Body {
-    Body::from(format!(" <!DOCTYPE html><body><h1>{}</h1><h2>{}</h2><body>",
-            status_code.as_str(), status_code.canonical_reason().unwrap_or("?")))
+    Body::from(format!(
+        " <!DOCTYPE html><body><h1>{}</h1><h2>{}</h2><body>",
+        status_code.as_str(),
+        status_code.canonical_reason().unwrap_or("?")
+    ))
 }
 
 pub fn gen_trace_body(req: &Request<Body>) -> Body {
@@ -43,7 +44,9 @@ pub fn gen_trace_body(req: &Request<Body>) -> Body {
     for header in req.headers() {
         match header.1.to_str() {
             Ok(value) => body.push_str(format!("\n{}: {}", header.0.as_str(), value).as_str()),
-            Err(..) => body.push_str(format!("\n{}: {}", header.0.as_str(), "[BINARY DATA]").as_str()),
+            Err(..) => {
+                body.push_str(format!("\n{}: {}", header.0.as_str(), "[BINARY DATA]").as_str())
+            }
         }
     }
 

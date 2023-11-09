@@ -1,6 +1,6 @@
 use colored::Colorize;
+use hyper::{Body, Method, Request, Response};
 use std::sync::Mutex;
-use hyper::{Request, Response, Method, Body};
 
 use chrono::Local;
 
@@ -15,7 +15,9 @@ pub fn is_quiet() -> bool {
 }
 
 pub fn print_header(url: &String) {
-    if is_quiet() { return; }
+    if is_quiet() {
+        return;
+    }
 
     println!();
     println!("  ╭─TWS");
@@ -27,7 +29,9 @@ pub fn print_header(url: &String) {
 }
 
 pub fn warn<T: std::fmt::Display>(msg: T) {
-    if is_quiet() { return; }
+    if is_quiet() {
+        return;
+    }
 
     let time = Local::now().format("%H:%M:%S").to_string().dimmed();
 
@@ -35,7 +39,9 @@ pub fn warn<T: std::fmt::Display>(msg: T) {
 }
 
 pub fn error<T: std::fmt::Display>(msg: T) {
-    if is_quiet() { return; }
+    if is_quiet() {
+        return;
+    }
 
     let time = Local::now().format("%H:%M:%S").to_string().dimmed();
 
@@ -43,7 +49,9 @@ pub fn error<T: std::fmt::Display>(msg: T) {
 }
 
 pub fn log_request(req: &Request<Body>, res: &Response<Body>) {
-    if is_quiet() { return; }
+    if is_quiet() {
+        return;
+    }
 
     let time = Local::now().format("%H:%M:%S").to_string().dimmed();
 
@@ -57,8 +65,11 @@ pub fn log_request(req: &Request<Body>, res: &Response<Body>) {
         Method::OPTIONS => " OPT ".on_blue(),
         Method::TRACE => " TRACE ".on_purple(),
         Method::PATCH => " PATCH ".on_yellow(),
-        _ => " ??? ".on_white()
-    }.bold().black().to_string();
+        _ => " ??? ".on_white(),
+    }
+    .bold()
+    .black()
+    .to_string();
 
     let code = res.status().as_u16();
     let status_code = match code / 100 {
@@ -67,8 +78,11 @@ pub fn log_request(req: &Request<Body>, res: &Response<Body>) {
         3 => format!(" {} ", code).on_yellow(),
         4 => format!(" {} ", code).on_red(),
         5 => format!(" {} ", code).on_blue(),
-        _ => format!(" {} ", code).on_white()
-    }.bold().black().to_string();
+        _ => format!(" {} ", code).on_white(),
+    }
+    .bold()
+    .black()
+    .to_string();
 
     println!(" {}  {}  {:<21}  {}", time, status_code, method, req.uri());
 }

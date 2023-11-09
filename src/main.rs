@@ -1,28 +1,35 @@
-mod log;
 mod file;
-mod page;
+mod log;
 mod net;
+mod page;
 
+use clap::Parser;
+use hyper::service::{make_service_fn, service_fn};
+use hyper::StatusCode;
+use hyper::{header, Body, Method, Request, Response, Server};
 use std::convert::Infallible;
 use std::net::SocketAddr;
 use std::process;
-use hyper::{Body, Request, Response, Server, Method, header};
-use hyper::service::{make_service_fn, service_fn};
-use hyper::StatusCode;
-use clap::Parser;
 
 use file::FsEntityStatus;
 
 #[derive(Parser)]
 #[command(
-    author, version, about,
+    author,
+    version,
+    about,
     help_template = "\n{name} v{version}\n\n{about}\n\n{usage-heading}: {usage}\n\n{all-args}\n\nAuthor:\n{author}\n"
-    )]
+)]
 struct Args {
     #[arg(short, long, default_value_t = false, help = "Disables all output")]
     quiet: bool,
-    #[arg(short, long, default_value = "127.0.0.1:4000", help = "What ip address to use")]
-    address: String
+    #[arg(
+        short,
+        long,
+        default_value = "127.0.0.1:4000",
+        help = "What ip address to use"
+    )]
+    address: String,
 }
 
 async fn handle_request(req: Request<Body>) -> Result<Response<Body>, Infallible> {
@@ -40,43 +47,62 @@ async fn handle_request(req: Request<Body>) -> Result<Response<Body>, Infallible
     };
 
     match req.method() {
-        &Method::GET => {
-            match page::from_file(&path) {
-                Ok(b) => {
-                    *res.status_mut() = StatusCode::OK;
-                    *res.body_mut() = b;
-                    res.headers_mut().insert(header::CONTENT_TYPE, header::HeaderValue::from_str(file::get_mine_type(path).as_str()).unwrap());
-                },
-                Err(e) => {
-                    *res.status_mut() = e;
-                    res.headers_mut().insert(header::CONTENT_TYPE, header::HeaderValue::from_static("text/html"));
-                }
+        &Method::GET => match page::from_file(&path) {
+            Ok(b) => {
+                *res.status_mut() = StatusCode::OK;
+                *res.body_mut() = b;
+                res.headers_mut().insert(
+                    header::CONTENT_TYPE,
+                    header::HeaderValue::from_str(file::get_mine_type(path).as_str()).unwrap(),
+                );
+            }
+            Err(e) => {
+                *res.status_mut() = e;
+                res.headers_mut().insert(
+                    header::CONTENT_TYPE,
+                    header::HeaderValue::from_static("text/html"),
+                );
             }
         },
         &Method::HEAD => {
             if file::get_fs_entity_status(&path) == FsEntityStatus::NotFound {
                 *res.status_mut() = StatusCode::NOT_FOUND;
-                res.headers_mut().insert(header::CONTENT_TYPE, header::HeaderValue::from_static("text/html"));
+                res.headers_mut().insert(
+                    header::CONTENT_TYPE,
+                    header::HeaderValue::from_static("text/html"),
+                );
             } else {
                 *res.status_mut() = StatusCode::OK;
-                res.headers_mut().insert(header::CONTENT_TYPE, header::HeaderValue::from_str(file::get_mine_type(path).as_str()).unwrap());
+                res.headers_mut().insert(
+                    header::CONTENT_TYPE,
+                    header::HeaderValue::from_str(file::get_mine_type(path).as_str()).unwrap(),
+                );
             }
-        },
+        }
         &Method::OPTIONS => {
             *res.status_mut() = StatusCode::OK;
-            res.headers_mut().insert(header::ALLOW, header::HeaderValue::from_static("GET, HEAD, OPTIONS, TRACE"));
-        },
+            res.headers_mut().insert(
+                header::ALLOW,
+                header::HeaderValue::from_static("GET, HEAD, OPTIONS, TRACE"),
+            );
+        }
         &Method::TRACE => {
             *res.status_mut() = StatusCode::OK;
-            res.headers_mut().insert(header::CONTENT_TYPE, header::HeaderValue::from_static("message/http"));
+            res.headers_mut().insert(
+                header::CONTENT_TYPE,
+                header::HeaderValue::from_static("message/http"),
+            );
             *res.body_mut() = page::gen_trace_body(&req);
-        },
+        }
         &Method::POST | &Method::PUT | &Method::DELETE | &Method::PATCH | &Method::CONNECT => {
             if file::get_fs_entity_status(&path) == FsEntityStatus::NotFound {
                 *res.status_mut() = StatusCode::NOT_FOUND;
             } else {
                 *res.status_mut() = StatusCode::METHOD_NOT_ALLOWED;
-                res.headers_mut().insert(header::ALLOW, header::HeaderValue::from_static("GET, HEAD, OPTIONS, TRACE"));
+                res.headers_mut().insert(
+                    header::ALLOW,
+                    header::HeaderValue::from_static("GET, HEAD, OPTIONS, TRACE"),
+                );
             }
         }
         _ => {
@@ -118,16 +144,16 @@ async fn main() {
 
     log::print_header(&format!("http://{}", args.address));
 
-    let service = make_service_fn(|_conn| async {
-        Ok::<_, Infallible>(service_fn(handle_request))
-    });
+    let service =
+        make_service_fn(|_conn| async { Ok::<_, Infallible>(service_fn(handle_request)) });
 
     if let Some(e) = net::is_addr_free(addr) {
         log::error(e);
         process::exit(1);
     }
 
-    let server = Server::bind(&addr).serve(service)
+    let server = Server::bind(&addr)
+        .serve(service)
         .with_graceful_shutdown(shutdown_signal());
 
     if let Err(e) = server.await {
