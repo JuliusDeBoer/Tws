@@ -1,7 +1,7 @@
 [package]
 name = "tws"
 description = "A simple web server for developers"
-version = "0.0.0"
+version = "1.0.0"
 edition = "2021"
 authors = ["Julius de Boer"]
 readme = "README.md"
