@@ -14,11 +14,14 @@ use clap::Parser;
 use file::FsEntityStatus;
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
+#[command(
+    author, version, about,
+    help_template = "\n{name} v{version}\n\n{about}\n\n{usage-heading}: {usage}\n\n{all-args}\n\nAuthor:\n{author}\n"
+    )]
 struct Args {
-    #[arg(short, long)]
+    #[arg(short, long, default_value_t = false, help = "Disables all output")]
     quiet: bool,
-    #[arg(short, long, default_value_t = String::from("127.0.0.1:4000"))]
+    #[arg(short, long, default_value = "127.0.0.1:4000", help = "What ip address to use")]
     address: String
 }
 
