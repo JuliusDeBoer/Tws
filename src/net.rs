@@ -1,6 +1,8 @@
 use hyper::{header, HeaderMap};
-use std::env;
-use std::net::{SocketAddr, TcpListener};
+use std::{
+    env,
+    net::{SocketAddr, TcpListener},
+};
 
 pub fn parse_url(url: String) -> String {
     url.replace('\\', "/").replace("//", "/")

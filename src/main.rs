@@ -4,14 +4,13 @@ mod net;
 mod page;
 
 use clap::Parser;
-use hyper::service::{make_service_fn, service_fn};
-use hyper::StatusCode;
-use hyper::{header, Body, Method, Request, Response, Server};
-use std::convert::Infallible;
-use std::net::SocketAddr;
-use std::process;
-
 use file::FsEntityStatus;
+use hyper::{
+    header,
+    service::{make_service_fn, service_fn},
+    Body, Method, Request, Response, Server, StatusCode,
+};
+use std::{convert::Infallible, net::SocketAddr, process};
 
 #[derive(Parser)]
 #[command(

@@ -1,8 +1,7 @@
+use chrono::Local;
 use colored::Colorize;
 use hyper::{Body, Method, Request, Response};
 use std::sync::Mutex;
-
-use chrono::Local;
 
 static QUIET: Mutex<bool> = Mutex::new(false);
 

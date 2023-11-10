@@ -1,11 +1,9 @@
-use crate::file;
-use crate::file::FsEntityStatus;
-use crate::log;
+use crate::{file, log};
 use hyper::{Body, Request, StatusCode};
 use std::fs;
 
 pub fn from_file(path: &str) -> Result<Body, StatusCode> {
-    if file::get_fs_entity_status(path) != FsEntityStatus::IsFile {
+    if file::get_fs_entity_status(path) != file::FsEntityStatus::IsFile {
         return Err(StatusCode::NOT_FOUND);
     }
 
