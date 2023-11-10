@@ -9,7 +9,7 @@ A simple and lightweight development web server written in rust.
 You can install the latest stable version using cargo by running
 
 ```sh
-cargo install --tag v1.0.0 --git https://github.com/JuliusDeBoer/tws.git
+cargo install --tag v1.1.0 --git https://github.com/JuliusDeBoer/tws.git
 ```
 
 Or install the latest version by running
