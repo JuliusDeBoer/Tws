@@ -7,19 +7,6 @@ pub enum FsEntityStatus {
     NotFound,
 }
 
-#[derive(Clone)]
-pub struct File {
-    pub id: String,
-    pub content: Option<Vec<u8>>,
-}
-
-pub fn get_metadata(path: &str) -> Result<File, anyhow::Error> {
-    Ok(File {
-        id: path.to_string(),
-        content: None,
-    })
-}
-
 pub fn get_fs_entity_status(path: &str) -> FsEntityStatus {
     let metadata = fs::metadata(path);
     match metadata {

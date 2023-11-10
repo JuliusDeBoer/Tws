@@ -37,13 +37,12 @@ async fn handle_request(req: Request<Body>) -> Result<Response<Body>, Infallible
 
     net::set_default_headers(res.headers_mut());
 
-    let index_path = format!("./{}/index.html", req.uri().path());
-    let index_status = file::get_fs_entity_status(&index_path);
+    let file_status = file::get_fs_entity_status(req.uri().path());
 
-    let path: String = if index_status == FsEntityStatus::IsDir {
-        net::parse_url(format!("./{}", req.uri().path()).as_str())
+    let path: String = if file_status == FsEntityStatus::IsDir {
+        net::parse_url(format!(".{}/index.html", req.uri().path()))
     } else {
-        net::parse_url(&index_path)
+        net::parse_url(format!(".{}", req.uri().path()))
     };
 
     match req.method() {

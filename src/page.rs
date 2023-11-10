@@ -5,28 +5,16 @@ use hyper::{Body, Request, StatusCode};
 use std::fs;
 
 pub fn from_file(path: &str) -> Result<Body, StatusCode> {
-    match file::get_fs_entity_status(path) {
-        FsEntityStatus::IsFile => {
-            let mut file = match file::get_metadata(path) {
-                Ok(m) => m,
-                Err(e) => {
-                    log::error(e);
-                    return Err(StatusCode::NOT_FOUND);
-                }
-            };
+    if file::get_fs_entity_status(path) != FsEntityStatus::IsFile {
+        return Err(StatusCode::NOT_FOUND);
+    }
 
-            match fs::read(&file.id) {
-                Ok(v) => {
-                    file.content = Some(v);
-                    Ok(Body::from(file.content.unwrap()))
-                }
-                Err(e) => {
-                    log::error(e);
-                    Err(StatusCode::INTERNAL_SERVER_ERROR)
-                }
-            }
+    match fs::read(path) {
+        Ok(v) => Ok(Body::from(v)),
+        Err(e) => {
+            log::error(e);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
-        _ => Err(StatusCode::NOT_FOUND),
     }
 }
 
