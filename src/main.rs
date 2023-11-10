@@ -128,9 +128,7 @@ async fn shutdown_signal() {
 async fn main() {
     let args = Args::parse();
 
-    if args.quiet {
-        log::set_quiet(true);
-    }
+    log::set_quiet(args.quiet);
 
     let addr: SocketAddr = match args.address.parse() {
         Ok(a) => a,
@@ -145,7 +143,7 @@ async fn main() {
     let service =
         make_service_fn(|_conn| async { Ok::<_, Infallible>(service_fn(handle_request)) });
 
-    if let Some(e) = net::is_addr_free(addr) {
+    if let Err(e) = Server::try_bind(&addr) {
         log::error(e);
         process::exit(1);
     }

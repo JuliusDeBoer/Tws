@@ -1,22 +1,8 @@
 use hyper::{header, HeaderMap};
-use std::{
-    env,
-    net::{SocketAddr, TcpListener},
-};
+use std::env;
 
 pub fn parse_url(url: String) -> String {
     url.replace('\\', "/").replace("//", "/")
-}
-
-// TODO: Dont do this. Instead handle the error when it occurs
-pub fn is_addr_free(addr: SocketAddr) -> Option<anyhow::Error> {
-    match TcpListener::bind(addr) {
-        Ok(l) => {
-            drop(l);
-            None
-        }
-        Err(e) => Some(anyhow::format_err!(e)),
-    }
 }
 
 pub fn set_default_headers(headers: &mut HeaderMap<header::HeaderValue>) {
