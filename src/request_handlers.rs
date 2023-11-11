@@ -9,6 +9,7 @@ pub fn handle_get(req: &Request<Body>, res: &mut Response<Body>) {
     } else {
         net::parse_url(format!(".{}", req.uri().path()))
     };
+
     match page::from_file(&path) {
         Ok(b) => {
             *res.status_mut() = StatusCode::OK;
@@ -69,7 +70,7 @@ pub fn handle_trace(req: &Request<Body>, res: &mut Response<Body>) {
         header::CONTENT_TYPE,
         header::HeaderValue::from_static("message/http"),
     );
-    *res.body_mut() = page::gen_trace_body(&req);
+    *res.body_mut() = page::gen_trace_body(req);
 }
 
 pub fn handle_bad_method(res: &mut Response<Body>) {
@@ -82,4 +83,47 @@ pub fn handle_bad_method(res: &mut Response<Body>) {
 
 pub fn handle_invalid_method(res: &mut Response<Body>) {
     *res.status_mut() = StatusCode::NOT_IMPLEMENTED;
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::request_handlers::*;
+    use hyper::Uri;
+
+    #[test]
+    fn load_file() {
+        let mut req = Request::new(Body::default());
+        let mut res = Response::new(Body::default());
+
+        *req.uri_mut() = Uri::from_static("http://[::1]:4000/Cargo.toml");
+
+        handle_get(&req, &mut res);
+
+        assert_eq!(res.status(), StatusCode::OK);
+        assert_eq!(res.headers()[header::CONTENT_TYPE], "text/x-toml");
+    }
+
+    #[test]
+    fn load_dir() {
+        let mut req = Request::new(Body::default());
+        let mut res = Response::new(Body::default());
+
+        *req.uri_mut() = Uri::from_static("http://[::1]:4000/test");
+
+        handle_get(&req, &mut res);
+
+        assert_eq!(res.status(), StatusCode::OK);
+    }
+
+    #[test]
+    fn load_nothing() {
+        let mut req = Request::new(Body::default());
+        let mut res = Response::new(Body::default());
+
+        *req.uri_mut() = Uri::from_static("http://[::1]:4000/IDONTEXIST");
+
+        handle_get(&req, &mut res);
+
+        assert_eq!(res.status().as_u16() / 100, 4);
+    }
 }
