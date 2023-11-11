@@ -2,14 +2,14 @@ mod file;
 mod log;
 mod net;
 mod page;
+mod request_handlers;
 
 use clap::Parser;
-use file::FsEntityStatus;
 use hyper::{
-    header,
     service::{make_service_fn, service_fn},
     Body, Method, Request, Response, Server, StatusCode,
 };
+use request_handlers::*;
 use std::{convert::Infallible, net::SocketAddr, process};
 
 #[derive(Parser)]
@@ -36,76 +36,15 @@ async fn handle_request(req: Request<Body>) -> Result<Response<Body>, Infallible
 
     net::set_default_headers(res.headers_mut());
 
-    let file_status = file::get_fs_entity_status(req.uri().path());
-
-    let path: String = if file_status == FsEntityStatus::IsDir {
-        net::parse_url(format!(".{}/index.html", req.uri().path()))
-    } else {
-        net::parse_url(format!(".{}", req.uri().path()))
-    };
-
     match req.method() {
-        &Method::GET => match page::from_file(&path) {
-            Ok(b) => {
-                *res.status_mut() = StatusCode::OK;
-                *res.body_mut() = b;
-                res.headers_mut().insert(
-                    header::CONTENT_TYPE,
-                    header::HeaderValue::from_str(file::get_mine_type(path).as_str()).unwrap(),
-                );
-            }
-            Err(e) => {
-                *res.status_mut() = e;
-                res.headers_mut().insert(
-                    header::CONTENT_TYPE,
-                    header::HeaderValue::from_static("text/html"),
-                );
-            }
-        },
-        &Method::HEAD => {
-            if file::get_fs_entity_status(&path) == FsEntityStatus::NotFound {
-                *res.status_mut() = StatusCode::NOT_FOUND;
-                res.headers_mut().insert(
-                    header::CONTENT_TYPE,
-                    header::HeaderValue::from_static("text/html"),
-                );
-            } else {
-                *res.status_mut() = StatusCode::OK;
-                res.headers_mut().insert(
-                    header::CONTENT_TYPE,
-                    header::HeaderValue::from_str(file::get_mine_type(path).as_str()).unwrap(),
-                );
-            }
-        }
-        &Method::OPTIONS => {
-            *res.status_mut() = StatusCode::OK;
-            res.headers_mut().insert(
-                header::ALLOW,
-                header::HeaderValue::from_static("GET, HEAD, OPTIONS, TRACE"),
-            );
-        }
-        &Method::TRACE => {
-            *res.status_mut() = StatusCode::OK;
-            res.headers_mut().insert(
-                header::CONTENT_TYPE,
-                header::HeaderValue::from_static("message/http"),
-            );
-            *res.body_mut() = page::gen_trace_body(&req);
-        }
+        &Method::GET => handle_get(&req, &mut res),
+        &Method::HEAD => handle_head(&req, &mut res),
+        &Method::OPTIONS => handle_options(&mut res),
+        &Method::TRACE => handle_trace(&req, &mut res),
         &Method::POST | &Method::PUT | &Method::DELETE | &Method::PATCH | &Method::CONNECT => {
-            if file::get_fs_entity_status(&path) == FsEntityStatus::NotFound {
-                *res.status_mut() = StatusCode::NOT_FOUND;
-            } else {
-                *res.status_mut() = StatusCode::METHOD_NOT_ALLOWED;
-                res.headers_mut().insert(
-                    header::ALLOW,
-                    header::HeaderValue::from_static("GET, HEAD, OPTIONS, TRACE"),
-                );
-            }
+            handle_bad_method(&mut res)
         }
-        _ => {
-            *res.status_mut() = StatusCode::NOT_IMPLEMENTED;
-        }
+        _ => handle_invalid_method(&mut res),
     }
 
     log::log_request(&req, &res);
