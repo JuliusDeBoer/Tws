@@ -124,6 +124,6 @@ mod tests {
 
         handle_get(&req, &mut res);
 
-        assert_eq!(res.status().as_u16() / 100, 4);
+        assert_eq!(res.status().as_u16(), 404);
     }
 }
