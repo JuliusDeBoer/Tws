@@ -35,6 +35,7 @@ mod tests {
     fn mime() {
         assert_eq!(get_mine_type(String::from("test.txt")), "text/plain");
         assert_eq!(get_mine_type(String::from("test.html")), "text/html");
+        assert_eq!( get_mine_type(String::from("toml")), "application/octet-stream");
         assert_eq!(
             get_mine_type(String::from("test")),
             "application/octet-stream"
